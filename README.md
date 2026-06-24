@@ -4,6 +4,10 @@ A lightweight Telegram monitoring bot for GenesisL1 validators.
 
 This bot sends regular status updates to Telegram and helps validators monitor node health, validator status, staking information, block sync, system resources, and live L1 price.
 
+## Example Output
+
+![GenesisL1 Validator Monitor](bot-image.png)
+
 ## Features
 
 * Node process status
