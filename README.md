@@ -5,12 +5,10 @@
 <h1 align="center">GenesisL1 Validator Monitor Bot</h1>
 
 <p align="center">
+  
 A lightweight Telegram monitoring bot for GenesisL1 validators.
 </p>
 
-# GenesisL1 Validator Monitor Bot
-
-A lightweight Telegram monitoring bot for GenesisL1 validators.
 
 This bot sends regular status updates to Telegram and helps validators monitor node health, validator status, staking information, block sync, system resources, and live L1 price.
 
