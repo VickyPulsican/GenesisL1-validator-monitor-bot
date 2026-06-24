@@ -416,4 +416,7 @@ Built for GenesisL1 validators.
 Created by **Vicky_Pulsican**
 GenesisL1 Validator & Node Operator
 
-Special thanks to the GenesisL1 community for sharing price API resources.
+Special thanks to **@lesnik13utsa** for the excellent validator guides, explorer infrastructure, and continuous support for GenesisL1 node operators, and to **@VanPez** for providing the open-source L1 Price API used in this project.
+
+Additional thanks to the GenesisL1 community members who shared ideas, feedback, testing results, and suggestions that helped improve this monitoring bot.
+
