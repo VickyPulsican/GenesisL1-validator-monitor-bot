@@ -1,3 +1,13 @@
+<p align="center">
+  <img src="genesisl1-logo.png" width="180">
+</p>
+
+<h1 align="center">GenesisL1 Validator Monitor Bot</h1>
+
+<p align="center">
+A lightweight Telegram monitoring bot for GenesisL1 validators.
+</p>
+
 # GenesisL1 Validator Monitor Bot
 
 A lightweight Telegram monitoring bot for GenesisL1 validators.
