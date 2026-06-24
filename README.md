@@ -141,7 +141,7 @@ VALOPER_ADDRESS="YOUR_VALOPER_ADDRESS"
 LOCAL_HEIGHT=$(curl -s --max-time 10 "$LOCAL_RPC/status" | jq -r '.result.sync_info.latest_block_height // "0"')
 PUBLIC_HEIGHT=$(curl -s --max-time 10 "$PUBLIC_RPC/status" | jq -r '.result.sync_info.latest_block_height // "0"')
 CATCHING_UP=$(curl -s --max-time 10 "$LOCAL_RPC/status" | jq -r '.result.sync_info.catching_up' | tr -d '[:space:]')
-NODE_TIME=$(curl -s --max-time 10 "$LOCAL_RPC/status" | jq -r '.result.sync_info.latest_block_time // "unknown"')
+NODE_TIME=$(curl -s --max-time 10 "$LOCAL_RPC/status" | jq -r '.result.sync_info.latest_block_time // "unknown"' | cut -d'T' -f2 | cut -d'.' -f1)
 
 if [[ "$LOCAL_HEIGHT" =~ ^[0-9]+$ ]] && [[ "$PUBLIC_HEIGHT" =~ ^[0-9]+$ ]]; then
   BEHIND=$((PUBLIC_HEIGHT - LOCAL_HEIGHT))
@@ -163,14 +163,17 @@ else
   SYNC_STATUS="⚠️ Unknown"
 fi
 
+CPU_LOAD=$(uptime | awk -F'load average:' '{print $2}' | xargs)
+RAM_USAGE=$(free -m | awk '/Mem:/ {printf "%.1fGB/%.1fGB (%.1f%%)", $3/1024, $2/1024, ($3/$2)*100}')
+DISK_ROOT=$(df -h / | awk 'NR==2 {print $3 "/" $2 " (" $5 ")"}')
+DISK_DATA=$(df -h /data 2>/dev/null | awk 'NR==2 {print $3 "/" $2 " (" $5 ")"}')
+UPTIME=$(uptime -p)
+
+GENESIS_UPTIME_SECONDS=$(systemctl show genesisd --property=ActiveEnterTimestampMonotonic --value)
+GENESIS_UPTIME_SECONDS=$(( ($(cut -d' ' -f1 /proc/uptime | cut -d'.' -f1) * 1000000 - GENESIS_UPTIME_SECONDS) / 1000000 ))
+GENESIS_UPTIME="$(($GENESIS_UPTIME_SECONDS/86400))d $((($GENESIS_UPTIME_SECONDS%86400)/3600))h"
+
 VALIDATOR_STATUS=$(/root/go/bin/genesisd query staking validator "$VALOPER_ADDRESS" --node tcp://127.0.0.1:36657 --output json 2>/dev/null | jq -r '.validator.status')
-
-if [ "$VALIDATOR_STATUS" = "BOND_STATUS_BONDED" ]; then
-  VALIDATOR_DISPLAY="✅ Active (Validator Set)"
-else
-  VALIDATOR_DISPLAY="⚠️ ${VALIDATOR_STATUS:-Unknown}"
-fi
-
 VOTING_POWER_RAW=$(/root/go/bin/genesisd query staking validator "$VALOPER_ADDRESS" --node tcp://127.0.0.1:36657 --output json 2>/dev/null | jq -r '.validator.tokens')
 VOTING_POWER=$(awk "BEGIN {printf \"%'0.2f\", $VOTING_POWER_RAW/1000000000000000000}")
 
@@ -181,17 +184,13 @@ L1_PRICE=$(curl -s --max-time 10 http://46.224.42.12:8585/price.txt | awk '{prin
 L1_PRICE_NUM=$(echo "$L1_PRICE" | tr -d '$')
 SELF_STAKE_VALUE=$(awk "BEGIN {printf \"\$%.2f\", $SELF_DELEGATION * $L1_PRICE_NUM}")
 
-CPU_LOAD=$(uptime | awk -F'load average:' '{print $2}' | xargs)
-RAM_USAGE=$(free -h | awk '/Mem:/ {printf "%s/%s (%.1f%%)", $3, $2, ($3/$2)*100}')
-DISK_ROOT=$(df -h / | awk 'NR==2 {print $3 "/" $2 " (" $5 ")"}')
-DISK_DATA=$(df -h /data 2>/dev/null | awk 'NR==2 {print $3 "/" $2 " (" $5 ")"}')
-UPTIME=$(uptime -p)
+if [ "$VALIDATOR_STATUS" = "BOND_STATUS_BONDED" ]; then
+  VALIDATOR_DISPLAY="✅ Active (Validator Set)"
+else
+  VALIDATOR_DISPLAY="⚠️ ${VALIDATOR_STATUS:-Unknown}"
+fi
 
-GENESIS_UPTIME_SECONDS=$(systemctl show genesisd --property=ActiveEnterTimestampMonotonic --value)
-GENESIS_UPTIME_SECONDS=$(( ($(cut -d' ' -f1 /proc/uptime | cut -d'.' -f1) * 1000000 - GENESIS_UPTIME_SECONDS) / 1000000 ))
-GENESIS_UPTIME="$(($GENESIS_UPTIME_SECONDS/86400))d $((($GENESIS_UPTIME_SECONDS%86400)/3600))h"
-
-MESSAGE="📊 GenesisL1 Status Update
+MESSAGE="<pre>               GenesisL1 Validator Stats
 
 🟢 NODE & VALIDATOR
 ━━━━━━━━━━━━━━━━━━━━
@@ -221,16 +220,18 @@ Data Disk:         ${DISK_DATA:-N/A}
 
 ⏰ TIME & UPTIME
 ━━━━━━━━━━━━━━━━━━━━
-Last Block Time:   $NODE_TIME
+Last Block Time:   $NODE_TIME UTC
 VPS Uptime:        $UPTIME
 Genesis Uptime:    $GENESIS_UPTIME
 
-🤖 Built for GenesisL1 Validators"
+🤖 Powered by VickyPulsican</pre>"
 
 curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
   -d chat_id="${CHAT_ID}" \
+  -d parse_mode="HTML" \
   --data-urlencode text="$MESSAGE" >/dev/null
 ```
+
 
 Save:
 
