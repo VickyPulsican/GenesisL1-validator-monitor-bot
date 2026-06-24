@@ -6,7 +6,7 @@ This bot sends regular status updates to Telegram and helps validators monitor n
 
 ## Example Output
 
-![GenesisL1 Validator Monitor](bot-image.png)
+![GenesisL1 Validator Monitor](Bot%20Image.png)
 
 ## Features
 
