@@ -5,7 +5,6 @@
 <h1 align="center">GenesisL1 Validator Monitor Bot</h1>
 
 <p align="center">
-  
 A lightweight Telegram monitoring bot for GenesisL1 validators.
 </p>
 
