@@ -34,6 +34,7 @@ This bot sends regular status updates to Telegram and helps validators monitor n
 * VPS uptime
 * Genesis service uptime
 * Telegram notifications every 5 minutes
+* - L1 price, 24h change, 24h volume, and market cap tracking
 
 ## Requirements
 
@@ -180,8 +181,20 @@ VOTING_POWER=$(awk "BEGIN {printf \"%'0.2f\", $VOTING_POWER_RAW/1000000000000000
 SELF_DELEGATION_RAW=$(/root/go/bin/genesisd query staking delegation "$WALLET_ADDRESS" "$VALOPER_ADDRESS" --node tcp://127.0.0.1:36657 --output json 2>/dev/null | jq -r '.delegation_response.balance.amount')
 SELF_DELEGATION=$(awk "BEGIN {printf \"%.0f\", $SELF_DELEGATION_RAW/1000000000000000000}")
 
-L1_PRICE=$(curl -s --max-time 10 http://46.224.42.12:8585/price.txt | awk '{print $2}')
-L1_PRICE_NUM=$(echo "$L1_PRICE" | tr -d '$')
+PRICE_JSON=$(curl -s --max-time 10 http://46.224.42.12:8585/price)
+
+L1_PRICE_NUM=$(echo "$PRICE_JSON" | jq -r '.usd // 0')
+L1_PRICE=$(awk "BEGIN {printf \"\$%.6f\", $L1_PRICE_NUM}")
+
+CHANGE_24H=$(echo "$PRICE_JSON" | jq -r '.change_24h_pct // 0')
+CHANGE_24H_FMT=$(awk "BEGIN {printf \"%.2f%%\", $CHANGE_24H}")
+
+VOL_24H=$(echo "$PRICE_JSON" | jq -r '.vol_24h_usd // 0')
+VOL_24H_FMT=$(awk "BEGIN {printf \"\$%'0.2f\", $VOL_24H}")
+
+MCAP=$(echo "$PRICE_JSON" | jq -r '.mcap_usd // 0')
+MCAP_FMT=$(awk "BEGIN {printf \"\$%'0.2f\", $MCAP}")
+
 SELF_STAKE_VALUE=$(awk "BEGIN {printf \"\$%.2f\", $SELF_DELEGATION * $L1_PRICE_NUM}")
 
 if [ "$VALIDATOR_STATUS" = "BOND_STATUS_BONDED" ]; then
@@ -204,6 +217,9 @@ Voting Power:      $VOTING_POWER L1
 Self Delegation:   $SELF_DELEGATION L1
 Self Stake Value:  $SELF_STAKE_VALUE
 L1 Price:          $L1_PRICE
+24h Change:        $CHANGE_24H_FMT
+24h Volume:        $VOL_24H_FMT
+Market Cap:        $MCAP_FMT
 
 ⛓️ BLOCK INFO
 ━━━━━━━━━━━━━━━━━━━━
